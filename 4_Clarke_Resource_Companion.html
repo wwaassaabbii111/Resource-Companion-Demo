@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4 Clarke Resource Companion - Cardiac Clinical Prototype</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --hospital-crimson: #6d111e;
+      --hospital-crimson-dark: #4e0a14;
+      --hospital-crimson-light: #8b1828;
+      --hospital-gold: #c99e46;
+      --hospital-gold-light: #dfba6b;
+      --powerapp-canvas: #f1f4f8;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: radial-gradient(circle at 50% 15%, #1e293b 0%, #0a0f1d 100%);
+      min-height: 100vh;
+      margin: 0;
+      color: #1e293b;
+      user-select: none;
+    }
+
+    .brand-font {
+      font-family: 'Cinzel', serif;
+    }
+
+    /* Custom Scrollbar for In-App Containers */
+    .app-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .app-scroll::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.03);
+    }
+    .app-scroll::-webkit-scrollbar-thumb {
+      background: rgba(109, 17, 30, 0.3);
+      border-radius: 4px;
+    }
+
+    /* Strict Power Apps Styled Rounding Checkbox */
+    .power-check {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 1.8px solid #94a3b8;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+      display: inline-grid;
+      place-content: center;
+      background-color: #ffffff;
+      transition: all 0.15s ease-in-out;
+    }
+    .power-check:checked {
+      background-color: #ffffff;
+      border-color: #16a34a;
+      box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.15);
+    }
+    .power-check:checked::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 1.5px;
+      background-color: #16a34a;
+    }
+
+    /* Staff Checkbox - Dark bordered check */
+    .staff-check {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #475569;
+      border-radius: 3px;
+      cursor: pointer;
+      display: inline-grid;
+      place-content: center;
+      background-color: #fff;
+    }
+    .staff-check:checked {
+      background-color: #fff;
+      border-color: #6d111e;
+    }
+    .staff-check:checked::after {
+      content: "\f00c";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      font-size: 13px;
+      color: #6d111e;
+    }
+
+    /* Power Apps Beveled Action Buttons */
+    .power-btn {
+      background: linear-gradient(180deg, #781423 0%, #520b16 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.2);
+      border-radius: 4px;
+      font-weight: 600;
+      transition: all 0.1s ease;
+    }
+    .power-btn:hover {
+      background: linear-gradient(180deg, #871829 0%, #5c0c18 100%);
+    }
+    .power-btn:active {
+      transform: scale(0.98);
+      filter: brightness(0.92);
+    }
+
+    /* Pill Badges */
+    .badge-stepdown {
+      background-color: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    .badge-obs {
+      background-color: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    .badge-inpatient {
+      background-color: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-start p-2 sm:p-5 min-h-screen">
+
+  <!-- ================= TOP TOOLBAR & GLOBAL CONTROLLER ================= -->
+  <header class="w-full max-w-5xl mb-4 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-3 sm:p-4 text-white shadow-2xl flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6d111e] to-[#4e0a14] border border-[#c99e46]/40 flex items-center justify-center shadow-md">
+        <span class="brand-font font-bold text-amber-300 text-base">4C</span>
+      </div>
+      <div>
+        <h1 class="font-bold text-sm sm:text-base tracking-wide flex items-center gap-2">
+          4 Clarke Resource Companion
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Clinical Telemetry & Stepdown</span>
+        </h1>
+        <p class="text-xs text-slate-400">Cardiology Acuity, Throughput & Staffing Grid Simulator</p>
+      </div>
+    </div>
+
+    <!-- Quick Screen Jump Navigation Selector -->
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-slate-400 font-medium">Jump Interface:</span>
+      <select id="screenMasterPicker" onchange="navigateTo(this.value)" class="bg-slate-800 border border-slate-700 text-xs text-amber-300 font-medium px-2.5 py-1.5 rounded-xl outline-none cursor-pointer focus:border-amber-400">
+        <option value="screen-home">1. Main Menu (Home)</option>
+        <option value="screen-quality">2. Quality Resource Rounds</option>
+        <option value="screen-throughput">3. Throughput Hub</option>
+        <option value="screen-psc">4. PSC Log (Sitter Tracking)</option>
+        <option value="screen-psc-form">5. PSC Attestation & Signature</option>
+        <option value="screen-floating">6. Floating Log</option>
+        <option value="screen-cancellations">7. Cancellations Log (Low Census)</option>
+        <option value="screen-sdrn">8. SD RN Rotation Tracker</option>
+        <option value="screen-stretched">9. Stretched RN Rotation Tracker</option>
+        <option value="screen-shift-report">10. Resource Shift Report</option>
+        <option value="screen-rounds-escalations">11. Rounds Data - Escalations</option>
+        <option value="screen-rounds-sos">12. Rounds Data - SOS (Lines/Drains/Restraints)</option>
+        <option value="screen-rounds-dc">13. Rounds Data - Discharges & Downgrades</option>
+        <option value="screen-patient-list">14. Full Patient List (Cards)</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- ================= IPHONE DEVICE FRAME ================= -->
+  <main id="deviceFrame" class="relative transition-all duration-300 shadow-2xl rounded-[50px] p-3 bg-gradient-to-b from-neutral-800 to-neutral-950 border-[6px] border-neutral-700 ring-1 ring-white/10 w-[392px] max-w-full h-[825px] flex flex-col justify-between overflow-hidden">
+    
+    <!-- Phone Top Dynamic Island / Speaker Notch -->
+    <div class="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-50 flex items-center justify-between px-3">
+      <div class="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-800"></div>
+      <div class="w-3 h-3 rounded-full bg-slate-900/80 flex items-center justify-center">
+        <div class="w-1.5 h-1.5 rounded-full bg-blue-950"></div>
+      </div>
+    </div>
+
+    <!-- Phone Screen Bezel Wrapper -->
+    <div class="relative w-full h-full bg-[#f8fafc] rounded-[40px] overflow-hidden flex flex-col shadow-inner">
+      
+      <!-- iOS Status Bar -->
+      <div class="w-full h-10 px-7 pt-2 flex items-center justify-between text-xs font-semibold text-neutral-800 select-none z-40 bg-white/80 backdrop-blur-sm">
+        <span id="currentTime">11:34</span>
+        <div class="flex items-center space-x-2 text-[11px] text-neutral-700">
+          <i class="fa-solid fa-signal"></i>
+          <i class="fa-solid fa-wifi"></i>
+          <i class="fa-solid fa-battery-full text-sm"></i>
+        </div>
+      </div>
+
+      <!-- ================= APPLICATION SCREENS WRAPPER ================= -->
+      <div class="relative flex-1 w-full overflow-hidden bg-[#eef2f6]">
+
+        <!-- ================= SCREEN 1: MAIN NAVIGATION HOME ================= -->
+        <section id="screen-home" class="app-screen absolute inset-0 flex flex-col bg-white overflow-y-auto">
+          <!-- Maroon Header Banner -->
+          <div class="bg-[#6d111e] text-white py-3.5 px-4 text-center font-semibold text-[17px] tracking-wide shadow-md">
+            4 Clarke Resource Companion
+          </div>
+
+          <!-- Central Unit Branding Card (No Heart Graphic, Clean Typography) -->
+          <div class="flex-1 flex flex-col items-center justify-center px-6 pb-12 pt-4">
+            
+            <div class="w-full max-w-[290px] bg-gradient-to-br from-[#6d111e] via-[#520b16] to-[#3a060d] rounded-2xl p-6 text-center border-2 border-[#c99e46]/60 shadow-xl mb-10 relative overflow-hidden">
+              <!-- Geometric Accent Lines -->
+              <div class="absolute -top-10 -right-10 w-28 h-28 bg-[#c99e46]/10 rounded-full blur-xl pointer-events-none"></div>
+              <div class="absolute -bottom-10 -left-10 w-28 h-28 bg-[#c99e46]/10 rounded-full blur-xl pointer-events-none"></div>
+              
+              <!-- Subtle Shield Crown -->
+              <div class="flex items-center justify-center mb-2 text-[#dfba6b]">
+                <i class="fa-solid fa-shield-halved text-2xl drop-shadow"></i>
+              </div>
+
+              <!-- Bold Unit Title -->
+              <div class="brand-font text-3xl font-extrabold text-white tracking-wider drop-shadow-sm">
+                4 CLARKE
+              </div>
+              
+              <!-- Gold Divider with Diamond -->
+              <div class="flex items-center justify-center gap-2 my-2.5">
+                <div class="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#c99e46]"></div>
+                <div class="w-1.5 h-1.5 rotate-45 bg-[#c99e46]"></div>
+                <div class="h-[1px] w-12 bg-gradient-to-l from-transparent to-[#c99e46]"></div>
+              </div>
+
+              <div class="text-[11px] font-bold tracking-[0.2em] text-[#dfba6b] uppercase">
+                Cardiac Telemetry & Stepdown
+              </div>
+              <div class="text-[9px] text-red-200/80 font-medium tracking-wide mt-1">
+                Clinical Resource & Patient Flow Management
+              </div>
+            </div>
+
+            <!-- Main Route Buttons -->
+            <div class="w-56 space-y-4">
+              <button onclick="navigateTo('screen-quality')" class="power-btn w-full py-3 text-center text-lg font-semibold tracking-wide flex items-center justify-center gap-2">
+                <i class="fa-solid fa-clipboard-check text-amber-300 text-sm"></i>
+                <span>Quality</span>
+              </button>
+              <button onclick="navigateTo('screen-throughput')" class="power-btn w-full py-3 text-center text-lg font-semibold tracking-wide flex items-center justify-center gap-2">
+                <i class="fa-solid fa-arrows-split-up-and-left text-amber-300 text-sm"></i>
+                <span>Throughput</span>
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 2: QUALITY RESOURCE ROUNDS GRID ================= -->
+        <section id="screen-quality" class="app-screen absolute inset-0 flex flex-col bg-[#eef2f6] hidden">
+          <!-- Maroon Header -->
+          <div class="bg-[#6d111e] text-white py-3 px-3.5 font-semibold text-[17px] tracking-wide flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2">
+              <button onclick="navigateTo('screen-home')" class="text-white hover:text-amber-200 mr-1">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
+              </button>
+              <span>Quality Resource Rounds</span>
+            </div>
+            <button onclick="navigateTo('screen-home')" class="text-white hover:text-amber-200">
+              <i class="fa-solid fa-house text-sm"></i>
+            </button>
+          </div>
+
+          <!-- Table Header Sticky Bar (Fixed text overlapping with explicit flex widths & clean typography) -->
+          <div class="bg-[#e2e8f0] border-b border-neutral-300 text-[10.5px] font-bold text-neutral-800 flex items-center py-2 px-2 select-none shadow-[0_1px_2px_rgba(0,0,0,0.05)] z-10">
+            <div class="w-[52px] shrink-0 text-left pl-1">Room #</div>
+            <div class="flex-1 min-w-0 text-left pl-1.5 truncate">Patient Name</div>
+            <div class="flex items-center shrink-0 space-x-1 text-center font-bold">
+              <div class="w-[32px] shrink-0 text-[9.5px] leading-tight text-neutral-700">Tubings</div>
+              <div class="w-[30px] shrink-0 text-[9.5px] leading-tight text-neutral-700">CVCs</div>
+              <div class="w-[30px] shrink-0 text-[9.5px] leading-tight text-neutral-700">Foleys</div>
+              <div class="w-[34px] shrink-0 text-[9.5px] leading-tight text-neutral-700">Wounds</div>
+              <div class="w-[42px] shrink-0 text-[9.5px] leading-tight text-neutral-700">Isolation</div>
+            </div>
+          </div>
+
+          <!-- Scrollable Patient Rows Grid -->
+          <div id="qualityTableRows" class="flex-1 overflow-y-auto app-scroll divide-y divide-neutral-200 bg-white">
+            <!-- Populated dynamically via JS -->
+          </div>
+
+          <!-- Bottom Micro Note & Home Button Bar -->
+          <div class="bg-white border-t border-neutral-300 p-2.5 flex flex-col items-center">
+            <p class="text-[9.5px] text-neutral-500 italic text-center leading-tight mb-2 max-w-[325px]">
+              *You can now swipe right over the patient name to document rounding for patients without lines/ foleys/ wounds/ iso/ or tubings.
+            </p>
+            <button onclick="navigateTo('screen-home')" class="text-[#6d111e] hover:text-[#520b16] p-1">
+              <i class="fa-solid fa-house text-xl"></i>
+            </button>
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 3: THROUGHPUT SUB-MENU ================= -->
+        <section id="screen-throughput" class="app-screen absolute inset-0 flex flex-col bg-[#540d17] hidden">
+          <!-- Maroon Header with Back Button -->
+          <div class="bg-[#540d17] border-b border-red-900/40 text-white py-3 px-3 flex items-center justify-between">
+            <button onclick="navigateTo('screen-home')" class="w-8 h-8 rounded-full border border-white/50 flex items-center justify-center text-white hover:bg-white/10">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <span class="font-semibold text-[17px] tracking-wide">4 Clarke Resource Companion</span>
+            <div class="w-8"></div>
+          </div>
+
+          <!-- Center Content: Compact Unit Badge & Throughput Grid (Now includes PSC Log) -->
+          <div class="flex-1 flex flex-col items-center justify-start pt-3 px-4 overflow-y-auto app-scroll">
+            
+            <!-- Compact Unit Header Card -->
+            <div class="w-full max-w-[290px] bg-gradient-to-r from-[#6d111e] via-[#7d1524] to-[#6d111e] rounded-xl p-3 text-center border border-[#c99e46]/60 shadow-lg mb-4">
+              <div class="brand-font text-2xl font-bold text-white tracking-widest">4 CLARKE</div>
+              <div class="text-[9px] font-bold text-amber-300 uppercase tracking-widest">Throughput, Staffing & Safety Operations</div>
+            </div>
+
+            <!-- Throughput Grid -->
+            <div class="grid grid-cols-2 gap-2.5 w-full max-w-[320px] pb-5">
+              <!-- Highlighted 1. PSC Log (Patient Safety Companion / Sitters) -->
+              <button onclick="navigateTo('screen-psc')" class="col-span-2 power-btn p-3 rounded-lg flex items-center justify-between shadow-md border border-amber-400/40 bg-gradient-to-r from-[#801423] via-[#6d111e] to-[#4e0a14]">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-7 h-7 rounded-md bg-amber-400/20 border border-amber-300/40 flex items-center justify-center text-amber-300 text-sm">
+                    <i class="fa-solid fa-user-shield"></i>
+                  </div>
+                  <div class="text-left">
+                    <span class="text-xs font-bold leading-tight block text-white">PSC Log (Sitter Tracking)</span>
+                    <span class="text-[9.5px] text-amber-200/90 font-normal">Day-by-Day Safety Companion Attestations</span>
+                  </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-xs text-amber-300 pr-1"></i>
+              </button>
+
+              <!-- 2. Floating Log -->
+              <button onclick="navigateTo('screen-floating')" class="power-btn p-2.5 text-center rounded-lg flex flex-col items-center justify-center gap-1 shadow-md border border-white/10">
+                <i class="fa-solid fa-paper-plane text-amber-300 text-sm"></i>
+                <span class="text-xs font-semibold leading-tight">Floating Log</span>
+              </button>
+
+              <!-- 3. Cancellations Log -->
+              <button onclick="navigateTo('screen-cancellations')" class="power-btn p-2.5 text-center rounded-lg flex flex-col items-center justify-center gap-1 shadow-md border border-white/10">
+                <i class="fa-solid fa-calendar-xmark text-amber-300 text-sm"></i>
+                <span class="text-xs font-semibold leading-tight">Cancellations Log</span>
+              </button>
+
+              <!-- 4. SD RN Rotation -->
+              <button onclick="navigateTo('screen-sdrn')" class="power-btn p-2.5 text-center rounded-lg flex flex-col items-center justify-center gap-1 shadow-md border border-white/10">
+                <i class="fa-solid fa-scale-balanced text-amber-300 text-sm"></i>
+                <span class="text-xs font-semibold leading-tight">SD RN Rotation</span>
+              </button>
+
+              <!-- 5. Stretched RN Rotation -->
+              <button onclick="navigateTo('screen-stretched')" class="power-btn p-2.5 text-center rounded-lg flex flex-col items-center justify-center gap-1 shadow-md border border-white/10">
+                <i class="fa-solid fa-arrows-left-right text-amber-300 text-sm"></i>
+                <span class="text-xs font-semibold leading-tight">Stretched RN Rotation</span>
+              </button>
+
+              <!-- 6. Resource Shift Report -->
+              <button onclick="navigateTo('screen-shift-report')" class="power-btn p-2.5 text-center rounded-lg flex flex-col items-center justify-center gap-1 shadow-md border border-white/10">
+                <i class="fa-solid fa-clipboard-list text-amber-300 text-sm"></i>
+                <span class="text-xs font-semibold leading-tight">Resource Shift Report</span>
+              </button>
+
+              <!-- 7. Rounds Data -->
+              <button onclick="navigateTo('screen-rounds-escalations')" class="power-btn p-2.5 text-center rounded-lg flex flex-col items-center justify-center gap-1 shadow-md border border-white/10">
+                <i class="fa-solid fa-chart-pie text-amber-300 text-sm"></i>
+                <span class="text-xs font-semibold leading-tight">Rounds Data</span>
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN: PSC (PATIENT SAFETY COMPANION / SITTER) LOG ================= -->
+        <section id="screen-psc" class="app-screen absolute inset-0 flex flex-col bg-[#f1f5f9] hidden">
+          <!-- Maroon Header -->
+          <div class="bg-[#6d111e] text-white py-3 px-3 flex items-center justify-between shadow-sm">
+            <button onclick="navigateTo('screen-throughput')" class="w-8 h-8 rounded-full border border-white/60 flex items-center justify-center text-white hover:bg-white/10">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <div class="text-center">
+              <span class="font-semibold text-[17px] tracking-wide block leading-tight">PSC Sitter Log</span>
+              <span class="text-[10px] text-amber-200/90">Patient Safety Companion Registry</span>
+            </div>
+            <button onclick="renderPscList()" title="Refresh" class="hover:text-amber-200 text-white">
+              <i class="fa-solid fa-rotate-right text-base"></i>
+            </button>
+          </div>
+
+          <!-- Day-by-Day Date Navigation Filter Bar -->
+          <div class="bg-white border-b border-neutral-300 px-3 py-2 flex items-center justify-between shadow-sm">
+            <button onclick="changePscDate(-1)" class="w-7 h-7 rounded border border-neutral-300 flex items-center justify-center text-neutral-600 hover:bg-neutral-100">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </button>
+            <div class="flex items-center gap-1.5 text-center">
+              <i class="fa-regular fa-calendar text-[#6d111e] text-xs"></i>
+              <span id="pscCurrentDateDisplay" class="text-xs font-bold text-neutral-800">Tuesday, Oct 27, 2026</span>
+              <span class="text-[9px] bg-red-100 text-red-800 font-bold px-1.5 py-0.2 rounded border border-red-200">Today</span>
+            </div>
+            <button onclick="changePscDate(1)" class="w-7 h-7 rounded border border-neutral-300 flex items-center justify-center text-neutral-600 hover:bg-neutral-100">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+          </div>
+
+          <!-- Informational Subtitle & Shift Badges -->
+          <div class="bg-amber-50/90 border-b border-amber-200/80 px-3 py-1.5 text-[10px] text-amber-900 flex items-center justify-between">
+            <span class="flex items-center gap-1">
+              <i class="fa-solid fa-circle-exclamation text-amber-700"></i>
+              <span>Select patient below to complete Sitter Attestation & Sign.</span>
+            </span>
+            <span id="pscPendingCount" class="font-bold text-[#6d111e] bg-amber-200/60 px-1.5 py-0.5 rounded">1 Pending</span>
+          </div>
+
+          <!-- Sitter Patient Cards Container -->
+          <div id="pscCardsContainer" class="flex-1 overflow-y-auto app-scroll p-2.5 space-y-2.5">
+            <!-- Populated via JS -->
+          </div>
+
+          <!-- Bottom Footer Navigation -->
+          <div class="bg-white border-t border-neutral-300 py-2 px-4 flex items-center justify-between">
+            <button onclick="navigateTo('screen-throughput')" class="text-[#6d111e] hover:text-[#520b16] p-1">
+              <i class="fa-solid fa-house text-xl"></i>
+            </button>
+            <span class="text-[10px] text-neutral-500 font-semibold">4 Clarke Cardiac Sitter Surveillance</span>
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN: PSC ATTESTATION & SIGNATURE FORM ================= -->
+        <section id="screen-psc-form" class="app-screen absolute inset-0 flex flex-col bg-white hidden">
+          <!-- Maroon Header -->
+          <div class="bg-[#6d111e] text-white py-3 px-3 flex items-center justify-between shadow-sm">
+            <button onclick="navigateTo('screen-psc')" class="w-8 h-8 rounded-full border border-white/60 flex items-center justify-center text-white hover:bg-white/10">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <div class="text-center">
+              <span class="font-semibold text-[17px] tracking-wide block leading-tight">PSC Attestation</span>
+              <span class="text-[10px] text-amber-200/90">Safety Companion Intake Form</span>
+            </div>
+            <div class="w-8"></div>
+          </div>
+
+          <!-- Patient Header Card -->
+          <div class="bg-gradient-to-r from-neutral-50 to-neutral-100 border-b border-neutral-200 p-3 flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="formRoom" class="text-base font-extrabold text-neutral-900">Room 4409</span>
+                <span id="formIndicationBadge" class="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-200">High Fall Risk</span>
+              </div>
+              <div id="formPatientName" class="text-xs font-semibold text-neutral-700">Tom Hanks</div>
+            </div>
+            <div class="text-right text-[10px] text-neutral-500">
+              <div>Shift: <strong class="text-neutral-800">Day (0700-1930)</strong></div>
+              <div>Date: <strong id="formDateDisplay" class="text-neutral-800">10/27/2026</strong></div>
+            </div>
+          </div>
+
+          <!-- Scrollable Form Body -->
+          <div class="flex-1 overflow-y-auto app-scroll p-3 space-y-3.5">
+            
+            <!-- Sitter Identity Inputs -->
+            <div class="space-y-2">
+              <label class="block text-xs font-bold text-neutral-800">
+                Patient Safety Companion (Sitter) Full Name <span class="text-red-600">*</span>
+              </label>
+              <input type="text" id="sitterNameInput" placeholder="e.g. Morgan Wallen, CNA" class="w-full text-xs border border-neutral-300 rounded-lg px-3 py-2 outline-none focus:border-[#6d111e] focus:ring-1 focus:ring-[#6d111e]">
+              
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <div>
+                  <label class="block text-[11px] font-semibold text-neutral-700">Employee ID / Badge #</label>
+                  <input type="text" id="sitterBadgeInput" placeholder="PSC-4928" class="w-full text-xs border border-neutral-300 rounded-lg px-2.5 py-1.5 outline-none focus:border-[#6d111e]">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-neutral-700">Assigned Shift</label>
+                  <select id="sitterShiftSelect" class="w-full text-xs border border-neutral-300 rounded-lg px-2 py-1.5 outline-none focus:border-[#6d111e] bg-white">
+                    <option value="Day Shift (0700 - 1930)">Day Shift (0700-1930)</option>
+                    <option value="Night Shift (1900 - 0730)">Night Shift (1900-0730)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Attestation Checkboxes -->
+            <div class="bg-neutral-50 border border-neutral-200 rounded-xl p-3 space-y-2.5">
+              <div class="text-xs font-bold text-[#6d111e] border-b border-neutral-200 pb-1 flex items-center justify-between">
+                <span>Compliance & Rounding Attestation</span>
+                <span class="text-[9.5px] text-neutral-400 font-normal">All required</span>
+              </div>
+
+              <!-- Checkbox 1 -->
+              <label class="flex items-start gap-2 text-xs text-neutral-700 cursor-pointer">
+                <input type="checkbox" id="checkRounding" class="power-check mt-0.5 shrink-0" checked>
+                <span class="text-[11px] leading-snug"><strong>Rounding Attestation:</strong> I will remain within arm's length/continuous line of sight with the patient at all times.</span>
+              </label>
+
+              <!-- Checkbox 2 -->
+              <label class="flex items-start gap-2 text-xs text-neutral-700 cursor-pointer">
+                <input type="checkbox" id="checkOriented" class="power-check mt-0.5 shrink-0" checked>
+                <span class="text-[11px] leading-snug"><strong>Oriented to Unit:</strong> Familiar with 4 Clarke call light system, emergency staff assist, and bathroom assistance protocol.</span>
+              </label>
+
+              <!-- Checkbox 3 -->
+              <label class="flex items-start gap-2 text-xs text-neutral-700 cursor-pointer">
+                <input type="checkbox" id="checkReport" class="power-check mt-0.5 shrink-0" checked>
+                <span class="text-[11px] leading-snug"><strong>RN Report Received:</strong> Safety plan, fall history, line protection, and behavioral de-escalation reviewed with Primary RN.</span>
+              </label>
+            </div>
+
+            <!-- Digital Signature Drawing Box Canvas -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                  <i class="fa-solid fa-signature text-[#6d111e]"></i>
+                  <span>Patient Safety Companion Signature <span class="text-red-600">*</span></span>
+                </label>
+                <button type="button" onclick="clearSignatureCanvas()" class="text-[11px] text-red-700 font-semibold hover:underline">
+                  <i class="fa-solid fa-eraser mr-1"></i>Clear Pad
+                </button>
+              </div>
+
+              <!-- Canvas element styled with touch handling -->
+              <div class="border-2 border-dashed border-neutral-300 rounded-xl bg-slate-50 relative overflow-hidden flex flex-col items-center justify-center p-1">
+                <canvas id="signatureCanvas" width="340" height="110" class="w-full h-[110px] bg-white rounded cursor-crosshair touch-none"></canvas>
+                <div id="sigPlaceholderNote" class="absolute pointer-events-none text-neutral-400 text-xs italic">
+                  Sign with finger or stylus here
+                </div>
+              </div>
+              <p class="text-[9.5px] text-neutral-500 italic">By signing, you certify legal clinical completion of safety companion shift handoff.</p>
+            </div>
+
+            <!-- Submit Action -->
+            <div class="pt-2">
+              <button onclick="submitPscAttestation()" class="power-btn w-full py-3 rounded-xl text-center text-sm font-bold flex items-center justify-center gap-2 shadow-lg">
+                <i class="fa-solid fa-file-signature text-amber-300"></i>
+                <span>Save & Submit Sitter Signature</span>
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 4: FLOATING LOG ================= -->
+        <section id="screen-floating" class="app-screen absolute inset-0 flex flex-col bg-white hidden">
+          <!-- Maroon Header with Back, Refresh & Funnel Filter Icons -->
+          <div class="bg-[#6d111e] text-white py-3 px-3 flex items-center justify-between shadow-sm">
+            <button onclick="navigateTo('screen-throughput')" class="w-8 h-8 rounded-full border border-white/60 flex items-center justify-center text-white hover:bg-white/10">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <div class="text-center">
+              <span class="font-semibold text-[17px] tracking-wide block leading-tight">Floating Log</span>
+              <span class="text-[10px] text-amber-200/90">Last Floated Shift Tracker</span>
+            </div>
+            <div class="flex items-center space-x-3 text-white text-base">
+              <button onclick="renderFloatingLog()" title="Refresh" class="hover:text-amber-200">
+                <i class="fa-solid fa-rotate-right text-base"></i>
+              </button>
+              <button id="floatingFilterBtn" onclick="toggleFloatingFilter()" title="Filter Selected" class="hover:text-amber-200">
+                <i class="fa-solid fa-filter text-base"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Search Box -->
+          <div class="p-2 border-b border-neutral-200 bg-neutral-50 flex items-center gap-2">
+            <div class="flex-1 flex items-center px-3 py-1.5 border border-neutral-300 rounded bg-white">
+              <i class="fa-solid fa-magnifying-glass text-neutral-400 text-xs mr-2"></i>
+              <input type="text" id="floatingSearchInput" oninput="filterFloatingStaff()" placeholder="Search by Employee Name" class="w-full text-xs text-neutral-800 placeholder-neutral-400 outline-none">
+            </div>
+            <button onclick="recordNewFloatAction()" class="bg-[#6d111e] text-white px-2.5 py-1.5 rounded text-xs font-semibold whitespace-nowrap shadow-sm hover:bg-[#520b16]">
+              <i class="fa-solid fa-plus text-[10px] mr-1"></i>Float RN
+            </button>
+          </div>
+
+          <!-- Staff Scrollable List -->
+          <div id="floatingStaffList" class="flex-1 overflow-y-auto app-scroll divide-y divide-neutral-200 bg-white">
+            <!-- Dynamic staff list -->
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 5: CANCELLATIONS LOG ================= -->
+        <section id="screen-cancellations" class="app-screen absolute inset-0 flex flex-col bg-white hidden">
+          <!-- Maroon Header -->
+          <div class="bg-[#6d111e] text-white py-3 px-3 flex items-center justify-between shadow-sm">
+            <button onclick="navigateTo('screen-throughput')" class="w-8 h-8 rounded-full border border-white/60 flex items-center justify-center text-white hover:bg-white/10">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <div class="text-center">
+              <span class="font-semibold text-[17px] tracking-wide block leading-tight">Cancellations Log</span>
+              <span class="text-[10px] text-amber-200/90">Low Census / Standby Order</span>
+            </div>
+            <button onclick="showToast('Cancellation queue refreshed')" class="hover:text-amber-200 text-white">
+              <i class="fa-solid fa-rotate-right text-base"></i>
+            </button>
+          </div>
+
+          <!-- Info banner on rotation fairness -->
+          <div class="bg-amber-50 border-b border-amber-200 p-2 px-3 text-[10.5px] text-amber-900 flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-amber-600"></i>
+            <span>Sorted by who has <strong>not been cancelled</strong> the longest (Next eligible for low census).</span>
+          </div>
+
+          <!-- Search Box -->
+          <div class="p-2 border-b border-neutral-200 bg-neutral-50">
+            <div class="flex items-center px-3 py-1.5 border border-neutral-300 rounded bg-white">
+              <i class="fa-solid fa-magnifying-glass text-neutral-400 text-xs mr-2"></i>
+              <input type="text" id="cancellationSearchInput" oninput="filterCancellationList()" placeholder="Search staff member..." class="w-full text-xs text-neutral-800 placeholder-neutral-400 outline-none">
+            </div>
+          </div>
+
+          <!-- Staff Cancellations List -->
+          <div id="cancellationsStaffList" class="flex-1 overflow-y-auto app-scroll divide-y divide-neutral-200 bg-white">
+            <!-- Dynamic Cancellation entries -->
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 6: SD RN (STEPDOWN RN) ROTATION LOG ================= -->
+        <section id="screen-sdrn" class="app-screen absolute inset-0 flex flex-col bg-white hidden">
+          <!-- Maroon Header -->
+          <div class="bg-[#6d111e] text-white py-3 px-3 flex items-center justify-between shadow-sm">
+            <button onclick="navigateTo('screen-throughput')" class="w-8 h-8 rounded-full border border-white/60 flex items-center justify-center text-white hover:bg-white/10">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <div class="text-center">
+              <span class="font-semibold text-[17px] tracking-wide block leading-tight">SD RN Rotation</span>
+              <span class="text-[10px] text-amber-200/90">Stepdown Acuity Fair-Share Tracker</span>
+            </div>
+            <button onclick="showToast('SD Rotation metrics re-indexed')" class="hover:text-amber-200 text-white">
+              <i class="fa-solid fa-rotate-right text-base"></i>
+            </button>
+          </div>
+
+          <!-- Explanatory Fairness Banner -->
+          <div class="bg-blue-50 border-b border-blue-200 p-2 px-3 text-[10.5px] text-blue-900 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-down-short-wide text-blue-600"></i>
+            <span><strong>Least SD shifts</strong> appear at top. Tap '+1 SD Shift' to log high-acuity assignment.</span>
+          </div>
+
+          <!-- List of RNs with SD Counts -->
+          <div id="sdRnList" class="flex-1 overflow-y-auto app-scroll divide-y divide-neutral-200 bg-white">
+            <!-- Populated via JS -->
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 7: STRETCHED RN ROTATION LOG ================= -->
+        <section id="screen-stretched" class="app-screen absolute inset-0 flex flex-col bg-white hidden">
+          <!-- Maroon Header -->
+          <div class="bg-[#6d111e] text-white py-3 px-3 flex items-center justify-between shadow-sm">
+            <button onclick="navigateTo('screen-throughput')" class="w-8 h-8 rounded-full border border-white/60 flex items-center justify-center text-white hover:bg-white/10">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <div class="text-center">
+              <span class="font-semibold text-[17px] tracking-wide block leading-tight">Stretched RN Rotation</span>
+              <span class="text-[10px] text-amber-200/90">Over-Ratio / Workload Equity</span>
+            </div>
+            <button onclick="showToast('Stretch metrics recalculated')" class="hover:text-amber-200 text-white">
+              <i class="fa-solid fa-rotate-right text-base"></i>
+            </button>
+          </div>
+
+          <!-- Fairness Banner -->
+          <div class="bg-purple-50 border-b border-purple-200 p-2 px-3 text-[10.5px] text-purple-900 flex items-center gap-2">
+            <i class="fa-solid fa-scale-balanced text-purple-600"></i>
+            <span><strong>Least stretched RNs</strong> are top priority when unit requires 1:5 ratio stretching.</span>
+          </div>
+
+          <!-- List of RNs with Stretched Counts -->
+          <div id="stretchedRnList" class="flex-1 overflow-y-auto app-scroll divide-y divide-neutral-200 bg-white">
+            <!-- Populated via JS -->
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 8: RESOURCE SHIFT REPORT ================= -->
+        <section id="screen-shift-report" class="app-screen absolute inset-0 flex flex-col bg-[#eef2f6] hidden">
+          <!-- Maroon Header -->
+          <div class="bg-[#6d111e] text-white py-3 px-3 flex items-center justify-between shadow-sm">
+            <button onclick="navigateTo('screen-throughput')" class="w-8 h-8 rounded-full border border-white/60 flex items-center justify-center text-white hover:bg-white/10">
+              <i class="fa-solid fa-chevron-left text-sm"></i>
+            </button>
+            <span class="font-semibold text-[17px] tracking-wide">Resource Shift Report</span>
+            <button onclick="showToast('Shift report saved to clipboard')" class="text-white hover:text-amber-200">
+              <i class="fa-regular fa-copy text-base"></i>
+            </button>
+          </div>
+
+          <!-- Shift Report Structured View -->
+          <div class="flex-1 overflow-y-auto app-scroll p-3 space-y-3">
+            
+            <!-- Unit Census Card -->
+            <div class="bg-white rounded-xl border border-neutral-300 p-3 shadow-sm">
+              <div class="flex items-center justify-between border-b border-neutral-200 pb-2 mb-2">
+                <span class="font-bold text-xs text-[#6d111e]">Unit Overview & Staffing Grid</span>
+                <span class="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">Day Shift (0700 - 1930)</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-neutral-50 p-2 rounded border border-neutral-200">
+                  <div class="text-[10px] text-neutral-500 font-medium">Unit Census</div>
+                  <div class="text-base font-bold text-neutral-900">28 / 30</div>
+                </div>
+                <div class="bg-neutral-50 p-2 rounded border border-neutral-200">
+                  <div class="text-[10px] text-neutral-500 font-medium">SD Acuity Pts</div>
+                  <div class="text-base font-bold text-red-700">6 Pts</div>
+                </div>
+                <div class="bg-neutral-50 p-2 rounded border border-neutral-200">
+                  <div class="text-[10px] text-neutral-500 font-medium">RN Staff On</div>
+                  <div class="text-base font-bold text-neutral-900">7 RNs</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Device Surveillance Summary -->
+            <div class="bg-white rounded-xl border border-neutral-300 p-3 shadow-sm">
+              <div class="font-bold text-xs text-[#6d111e] border-b border-neutral-200 pb-1.5 mb-2 flex items-center justify-between">
+                <span>Active Safety & Line Metrics</span>
+                <span class="text-[10px] text-neutral-500 font-normal">Audited: Today 11:00</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="flex items-center justify-between p-2 rounded bg-neutral-50 border border-neutral-200">
+                  <span class="text-neutral-700 font-medium"><i class="fa-solid fa-syringe text-blue-600 mr-1.5"></i>Central Lines:</span>
+                  <span class="font-bold text-neutral-900">3 (2 PICC, 1 HD)</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-neutral-50 border border-neutral-200">
+                  <span class="text-neutral-700 font-medium"><i class="fa-solid fa-droplet text-amber-600 mr-1.5"></i>Foley Catheters:</span>
+                  <span class="font-bold text-neutral-900">3 Foleys</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-neutral-50 border border-neutral-200">
+                  <span class="text-neutral-700 font-medium"><i class="fa-solid fa-handcuffs text-red-600 mr-1.5"></i>Restraints:</span>
+                  <span class="font-bold text-neutral-900">1 (Soft Wrist)</span>
+                </div>
+                <div class="flex items-center justify-between p-2 rounded bg-neutral-50 border border-neutral-200">
+                  <span class="text-neutral-700 font-medium"><i class="fa-solid fa-bandage text-emerald-600 mr-1.5"></i>Pressure Wounds:</span>
+                  <span class="font-bold text-neutral-900">2 Monitored</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Throughput Pipeline Forecast -->
+            <div class="bg-white rounded-xl border border-neutral-300 p-3 shadow-sm space-y-2">
+              <div class="font-bold text-xs text-[#6d111e] border-b border-neutral-200 pb-1.5">
+                Throughput & Bed Pipeline Forecast
+              </div>
+              <div class="text-xs space-y-2">
+                <div class="p-2 rounded bg-emerald-50 border border-emerald-200 text-emerald-900">
+                  <div class="font-bold text-[11px] flex items-center justify-between">
+                    <span>Projected Discharges (3 Beds)</span>
+                    <span class="text-[9px] bg-emerald-200 px-1.5 py-0.5 rounded">Rooms: 4404, 4412, 4419</span>
+                  </div>
+                  <div class="text-[10px] mt-0.5">Emma Stone awaiting rides; Cillian Murphy pending O2 vendor.</div>
+                </div>
+
+                <div class="p-2 rounded bg-blue-50 border border-blue-200 text-blue-900">
+                  <div class="font-bold text-[11px] flex items-center justify-between">
+                    <span>Pending Stepdown Downgrades (2 Beds)</span>
+                    <span class="text-[9px] bg-blue-200 px-1.5 py-0.5 rounded">Rooms: 4403, 4408</span>
+                  </div>
+                  <div class="text-[10px] mt-0.5">Pedro Pascal (EP ablation recovery); Denzel Washington (Off BiPAP).</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Staffing Fair-Share Recommendation -->
+            <div class="bg-white rounded-xl border border-neutral-300 p-3 shadow-sm">
+              <div class="font-bold text-xs text-[#6d111e] border-b border-neutral-200 pb-1.5 mb-1.5">
+                Next Shift Resource Recommendations
+              </div>
+              <ul class="text-[11px] text-neutral-700 space-y-1 list-disc list-inside">
+                <li><strong>Next in line to Float:</strong> Ryan Reynolds (Last: 4/12/2026)</li>
+                <li><strong>Next for Stepdown assignment:</strong> Jennifer Aniston (0 prior SD shifts)</li>
+                <li><strong>Next for Stretched ratio:</strong> Brad Pitt (0 prior stretch shifts)</li>
+              </ul>
+            </div>
+
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 9: ROUNDS DATA (ESCALATIONS TAB) ================= -->
+        <section id="screen-rounds-escalations" class="app-screen absolute inset-0 flex flex-col bg-[#e5e5e5] hidden">
+          <!-- 3-Segment Top Tab Bar -->
+          <div class="grid grid-cols-3 bg-[#6d111e] text-white text-xs text-center border-b border-[#520b16]">
+            <button onclick="navigateTo('screen-rounds-escalations')" class="py-2.5 font-bold bg-[#871829] border-b-2 border-amber-300">
+              Escalations
+            </button>
+            <button onclick="navigateTo('screen-rounds-sos')" class="py-2.5 font-semibold text-neutral-200 hover:bg-[#781423]">
+              SOS
+            </button>
+            <button onclick="navigateTo('screen-rounds-dc')" class="py-2.5 font-semibold text-neutral-200 hover:bg-[#781423] leading-tight">
+              Discharges and<br>Downgrades
+            </button>
+          </div>
+
+          <!-- Tab Content Cards -->
+          <div class="flex-1 overflow-y-auto app-scroll p-3 space-y-3">
+            
+            <!-- Obs Patient Escalations Card -->
+            <div class="bg-white rounded border border-neutral-300 shadow-sm overflow-hidden">
+              <div class="bg-[#f8f9fa] border-b border-neutral-200 px-3 py-2 text-xs font-bold text-neutral-800 flex items-center justify-between">
+                <span>Obs Patient Escalations</span>
+                <span class="text-[10px] text-neutral-500 font-normal">2 Pending</span>
+              </div>
+              
+              <div class="p-2 grid grid-cols-2 gap-2">
+                <!-- 4407 Card - Zendaya Coleman -->
+                <div class="border border-neutral-300 rounded p-1.5 bg-neutral-50/60 flex flex-col justify-between">
+                  <div>
+                    <div class="text-center font-bold text-sm text-neutral-900">4407</div>
+                    <div class="text-center text-[10.5px] text-neutral-700 mb-1.5 truncate font-semibold">Zendaya Coleman</div>
+                    <div class="text-[9px] bg-red-50 text-red-900 p-1 rounded border border-red-200 mb-1.5 leading-tight font-medium">
+                      Troponin trending q3h (last 0.42 ng/mL)
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-1">
+                      <input type="text" placeholder="Add item" class="w-full text-[10px] border border-neutral-300 px-1 py-0.5 rounded">
+                      <button onclick="showToast('Item saved')" class="bg-[#6d111e] text-white px-1.5 py-0.5 rounded text-[10px]"><i class="fa-solid fa-check"></i></button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4414 Card - Scarlett Johansson -->
+                <div class="border border-neutral-300 rounded p-1.5 bg-neutral-50/60 flex flex-col justify-between">
+                  <div>
+                    <div class="text-center font-bold text-sm text-neutral-900">4414</div>
+                    <div class="text-center text-[10.5px] text-neutral-700 mb-1 truncate font-semibold">Scarlett Johansson</div>
+                    <div class="text-[9px] bg-amber-50 text-neutral-800 p-1 rounded border border-amber-200 mb-1 leading-tight font-semibold">
+                      NEPHROSTOMY TUBE EXCHANGE MONDAY
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-1">
+                      <input type="text" placeholder="Add item" class="w-full text-[10px] border border-neutral-300 px-1 py-0.5 rounded">
+                      <button onclick="showToast('Item saved')" class="bg-[#6d111e] text-white px-1.5 py-0.5 rounded text-[10px]"><i class="fa-solid fa-check"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Inpatient Escalations Card -->
+            <div class="bg-white rounded border border-neutral-300 shadow-sm overflow-hidden">
+              <div class="bg-[#f8f9fa] border-b border-neutral-200 px-3 py-2 text-xs font-bold text-neutral-800 flex items-center justify-between">
+                <span>Inpatient Escalations</span>
+                <span class="text-[10px] text-neutral-500 font-normal">2 Pending</span>
+              </div>
+              
+              <div class="p-2 grid grid-cols-2 gap-2">
+                <!-- 4402 Card - Meryl Streep -->
+                <div class="border border-neutral-300 rounded p-1.5 bg-neutral-50/60 flex flex-col justify-between">
+                  <div>
+                    <div class="text-center font-bold text-sm text-neutral-900">4402</div>
+                    <div class="text-center text-[10.5px] text-neutral-700 mb-1 truncate font-semibold">Meryl Streep</div>
+                    <div class="text-[9px] bg-purple-50 text-purple-900 p-1 rounded border border-purple-200 mb-1 font-medium">
+                      Echocardiogram formal read pending
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-1">
+                      <input type="text" placeholder="Add item" class="w-full text-[10px] border border-neutral-300 px-1 py-0.5 rounded">
+                      <button onclick="showToast('Item saved')" class="bg-[#6d111e] text-white px-1.5 py-0.5 rounded text-[10px]"><i class="fa-solid fa-check"></i></button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4410 Card - Leonardo DiCaprio with D/C badge -->
+                <div class="border border-neutral-300 rounded p-1.5 bg-neutral-50/60 flex flex-col justify-between relative">
+                  <span class="absolute top-1 right-1 bg-amber-400 text-amber-950 font-bold text-[9px] px-1 rounded">D/C</span>
+                  <div>
+                    <div class="text-center font-bold text-sm text-neutral-900">4410</div>
+                    <div class="text-center text-[10.5px] text-neutral-700 mb-1 truncate font-semibold">Leonardo DiCaprio</div>
+                    
+                    <!-- Clinical Checklist items inside card -->
+                    <div class="space-y-0.5 text-[9px] text-neutral-700 mb-1">
+                      <label class="flex items-center gap-1">
+                        <input type="checkbox" class="power-check" style="width:14px;height:14px;">
+                        <span>icd placement on monday</span>
+                      </label>
+                      <label class="flex items-center gap-1">
+                        <input type="checkbox" class="power-check" style="width:14px;height:14px;" checked>
+                        <span>goal INR 2.0-3.0</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-1">
+                      <input type="text" placeholder="Add item" class="w-full text-[10px] border border-neutral-300 px-1 py-0.5 rounded">
+                      <button onclick="showToast('Item saved')" class="bg-[#6d111e] text-white px-1.5 py-0.5 rounded text-[10px]"><i class="fa-solid fa-check"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Footer Navigation -->
+          <div class="bg-white border-t border-neutral-300 py-2 px-4 flex items-center justify-between">
+            <button onclick="navigateTo('screen-throughput')" class="text-[#6d111e] hover:text-[#520b16] p-1">
+              <i class="fa-solid fa-house text-xl"></i>
+            </button>
+            <button onclick="navigateTo('screen-patient-list')" class="text-xs text-neutral-600 font-semibold flex items-center hover:text-neutral-900">
+              Full Patient List <i class="fa-solid fa-chevron-right text-[10px] ml-1"></i>
+            </button>
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 10: ROUNDS DATA (SOS TAB - LINES/DRAINS/RESTRAINTS) ================= -->
+        <section id="screen-rounds-sos" class="app-screen absolute inset-0 flex flex-col bg-[#e5e5e5] hidden">
+          <!-- 3-Segment Top Tab Bar -->
+          <div class="grid grid-cols-3 bg-[#6d111e] text-white text-xs text-center border-b border-[#520b16]">
+            <button onclick="navigateTo('screen-rounds-escalations')" class="py-2.5 font-semibold text-neutral-200 hover:bg-[#781423]">
+              Escalations
+            </button>
+            <button onclick="navigateTo('screen-rounds-sos')" class="py-2.5 font-bold bg-[#871829] border-b-2 border-amber-300">
+              SOS
+            </button>
+            <button onclick="navigateTo('screen-rounds-dc')" class="py-2.5 font-semibold text-neutral-200 hover:bg-[#781423] leading-tight">
+              Discharges &<br>Downgrades
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto app-scroll p-3 space-y-3">
+            
+            <!-- Central Lines Section -->
+            <div class="bg-white rounded border border-neutral-300 shadow-sm overflow-hidden">
+              <div class="bg-white border-b border-neutral-200 px-3 py-2 flex items-center justify-between">
+                <span class="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                  <i class="fa-solid fa-syringe text-blue-600"></i> Central Lines
+                </span>
+                <button onclick="showToast('New Central Line entry form')" class="text-[#6d111e] font-bold text-sm hover:scale-110"><i class="fa-solid fa-plus"></i></button>
+              </div>
+
+              <!-- Lines List -->
+              <div class="divide-y divide-neutral-100 text-xs">
+                <!-- Line item 1 -->
+                <div class="p-2.5 flex items-center justify-between hover:bg-neutral-50">
+                  <div>
+                    <div class="font-bold text-neutral-800 text-[11px]">PICC Line</div>
+                    <div class="text-[9px] text-neutral-500 uppercase tracking-tight font-medium">Indication: Long-term IV antibiotics</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4403</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Pedro Pascal</div>
+                  </div>
+                </div>
+
+                <!-- Line item 2 -->
+                <div class="p-2.5 flex items-center justify-between hover:bg-neutral-50">
+                  <div>
+                    <div class="font-bold text-neutral-800 text-[11px]">Tunneled HD Catheter</div>
+                    <div class="text-[9px] text-neutral-500 uppercase tracking-tight font-medium">Indication: Hemodialysis access</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4407</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Zendaya Coleman</div>
+                  </div>
+                </div>
+
+                <!-- Line item 3 -->
+                <div class="p-2.5 flex items-center justify-between hover:bg-neutral-50">
+                  <div>
+                    <div class="font-bold text-neutral-800 text-[11px]">Midline IV Catheter</div>
+                    <div class="text-[9px] text-neutral-500 uppercase tracking-tight font-medium">Indication: Difficult venous access</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4418</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Morgan Freeman</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Indwelling Urinary Catheters Section -->
+            <div class="bg-white rounded border border-neutral-300 shadow-sm overflow-hidden">
+              <div class="bg-white border-b border-neutral-200 px-3 py-2 flex items-center justify-between">
+                <span class="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                  <i class="fa-solid fa-droplet text-amber-600"></i> Indwelling Urinary Catheters
+                </span>
+                <button onclick="showToast('New Foley entry form')" class="text-[#6d111e] font-bold text-sm hover:scale-110"><i class="fa-solid fa-plus"></i></button>
+              </div>
+
+              <div class="divide-y divide-neutral-100 text-xs">
+                <!-- Foley 1 -->
+                <div class="p-2.5 flex items-center justify-between hover:bg-neutral-50">
+                  <div>
+                    <div class="font-bold text-neutral-800 text-[11px]">Regular Foley</div>
+                    <div class="text-[10px] text-neutral-500">Acute urinary retention</div>
+                  </div>
+                  <div class="text-center text-[10px] text-neutral-500 font-medium">
+                    10/18/2026
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4401</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Leonardo DiCaprio</div>
+                  </div>
+                </div>
+
+                <!-- Foley 2 -->
+                <div class="p-2.5 flex items-center justify-between hover:bg-neutral-50">
+                  <div>
+                    <div class="font-bold text-neutral-800 text-[11px]">Regular Foley</div>
+                    <div class="text-[10px] text-neutral-500">Strict I&O / Hemodynamic monitoring</div>
+                  </div>
+                  <div class="text-center text-[10px] text-neutral-500 font-medium">
+                    10/22/2026
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4402</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Meryl Streep</div>
+                  </div>
+                </div>
+
+                <!-- Foley 3 -->
+                <div class="p-2.5 flex items-center justify-between hover:bg-neutral-50">
+                  <div>
+                    <div class="font-bold text-neutral-800 text-[11px]">Coudé Foley</div>
+                    <div class="text-[10px] text-neutral-500">BPH obstruction</div>
+                  </div>
+                  <div class="text-center text-[10px] text-neutral-500 font-medium">
+                    10/25/2026
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4405</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Keanu Reeves</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Restraints Section (Active Mock Patient) -->
+            <div class="bg-white rounded border border-neutral-300 shadow-sm overflow-hidden">
+              <div class="bg-white border-b border-neutral-200 px-3 py-2 flex items-center justify-between">
+                <span class="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                  <i class="fa-solid fa-handcuffs text-red-600"></i> Active Restraints
+                </span>
+                <button onclick="showToast('Restraint documentation')" class="text-[#6d111e] font-bold text-sm hover:scale-110"><i class="fa-solid fa-plus"></i></button>
+              </div>
+              <div class="p-2.5 flex items-start justify-between bg-red-50/40">
+                <div class="max-w-[210px]">
+                  <div class="font-bold text-neutral-900 text-xs">Bilateral Soft Wrist Restraints</div>
+                  <div class="text-[10px] text-neutral-600 mt-0.5 leading-snug">Severe delirium, line pulling. Order active, Q2h neurovascular checks current.</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-bold text-neutral-900 text-xs">4409</div>
+                  <div class="text-[10px] text-neutral-700 font-medium">Tom Hanks</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Footer Navigation -->
+          <div class="bg-white border-t border-neutral-300 py-2.5 px-4 flex justify-center">
+            <button onclick="navigateTo('screen-throughput')" class="text-[#6d111e] hover:text-[#520b16]">
+              <i class="fa-solid fa-house text-xl"></i>
+            </button>
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 11: DISCHARGES & DOWNGRADES TAB ================= -->
+        <section id="screen-rounds-dc" class="app-screen absolute inset-0 flex flex-col bg-[#e5e5e5] hidden">
+          <!-- 3-Segment Top Tab Bar -->
+          <div class="grid grid-cols-3 bg-[#6d111e] text-white text-xs text-center border-b border-[#520b16]">
+            <button onclick="navigateTo('screen-rounds-escalations')" class="py-2.5 font-semibold text-neutral-200 hover:bg-[#781423]">
+              Escalations
+            </button>
+            <button onclick="navigateTo('screen-rounds-sos')" class="py-2.5 font-semibold text-neutral-200 hover:bg-[#781423]">
+              SOS
+            </button>
+            <button onclick="navigateTo('screen-rounds-dc')" class="py-2.5 font-bold bg-[#871829] border-b-2 border-amber-300 leading-tight">
+              Discharges &<br>Downgrades
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto app-scroll p-3 space-y-3">
+            
+            <!-- Discharges Section -->
+            <div class="bg-white rounded border border-neutral-300 shadow-sm overflow-hidden">
+              <div class="bg-white border-b border-neutral-200 px-3 py-2 flex items-center justify-between">
+                <span class="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                  <i class="fa-solid fa-door-open text-emerald-600"></i> Projected Discharges
+                </span>
+                <button onclick="showToast('Add discharge candidate')" class="text-[#6d111e] font-bold text-sm"><i class="fa-solid fa-plus"></i></button>
+              </div>
+
+              <div class="divide-y divide-neutral-100 text-xs">
+                <!-- DC 1 -->
+                <div class="p-2.5 flex items-start justify-between hover:bg-neutral-50">
+                  <div class="max-w-[200px]">
+                    <div class="font-bold text-neutral-800 text-[11px] text-emerald-700">Discharge Order Placed</div>
+                    <div class="text-[10px] text-neutral-600 mt-0.5">Awaiting cardiology discharge summary & prescriptions. Ride arriving 13:00.</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4404</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Emma Stone</div>
+                  </div>
+                </div>
+
+                <!-- DC 2 -->
+                <div class="p-2.5 flex items-start justify-between hover:bg-neutral-50">
+                  <div class="max-w-[200px]">
+                    <div class="font-bold text-neutral-800 text-[11px] text-emerald-700">Discharge in Progress</div>
+                    <div class="text-[10px] text-neutral-600 mt-0.5">Pending home O2 delivery vendor and cardiac rehab education packet.</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4412</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Cillian Murphy</div>
+                  </div>
+                </div>
+
+                <!-- DC 3 -->
+                <div class="p-2.5 flex items-start justify-between hover:bg-neutral-50">
+                  <div class="max-w-[200px]">
+                    <div class="font-bold text-neutral-800 text-[11px] text-amber-700">Discharge Barrier</div>
+                    <div class="text-[10px] text-neutral-600 mt-0.5">Shelter placement pending; PICC line DVT cleared by vascular surgery.</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4419</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Scarlett Johansson</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Downgrades Section -->
+            <div class="bg-white rounded border border-neutral-300 shadow-sm overflow-hidden">
+              <div class="bg-white border-b border-neutral-200 px-3 py-2 flex items-center justify-between">
+                <span class="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                  <i class="fa-solid fa-arrow-down text-blue-600"></i> Acuity Downgrades
+                </span>
+                <button onclick="showToast('Add downgrade candidate')" class="text-[#6d111e] font-bold text-sm"><i class="fa-solid fa-plus"></i></button>
+              </div>
+
+              <div class="divide-y divide-neutral-100 text-xs">
+                <!-- Downgrade 1 -->
+                <div class="p-2.5 flex items-start justify-between hover:bg-neutral-50">
+                  <div class="max-w-[200px]">
+                    <div class="font-bold text-neutral-800 text-[11px] text-blue-700">Stepdown → Telemetry Floor</div>
+                    <div class="text-[10px] text-neutral-600 mt-0.5">s/p EP Ablation, A-line removed, hemodynamically stable. Ready for floor bed.</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4403</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Pedro Pascal</div>
+                  </div>
+                </div>
+
+                <!-- Downgrade 2 -->
+                <div class="p-2.5 flex items-start justify-between hover:bg-neutral-50">
+                  <div class="max-w-[200px]">
+                    <div class="font-bold text-neutral-800 text-[11px] text-blue-700">Stepdown → Telemetry Floor</div>
+                    <div class="text-[10px] text-neutral-600 mt-0.5">BiPAP discontinued, room air trial passed, downgrade to floor telemetry.</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-bold text-neutral-900 text-xs">4408</div>
+                    <div class="text-[10px] text-neutral-600 font-medium">Denzel Washington</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Footer Navigation -->
+          <div class="bg-white border-t border-neutral-300 py-2.5 px-4 flex justify-center">
+            <button onclick="navigateTo('screen-throughput')" class="text-[#6d111e] hover:text-[#520b16]">
+              <i class="fa-solid fa-house text-xl"></i>
+            </button>
+          </div>
+        </section>
+
+
+        <!-- ================= SCREEN 12: FULL PATIENT LIST (CLINICAL CARDS) ================= -->
+        <section id="screen-patient-list" class="app-screen absolute inset-0 flex flex-col bg-white hidden">
+          <!-- Maroon Header with + New Patient Action -->
+          <div class="bg-white border-b border-neutral-200 py-2 px-3 flex items-center justify-between">
+            <button onclick="navigateTo('screen-rounds-escalations')" class="text-[#6d111e] text-lg font-bold px-1">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <button onclick="showToast('New patient admission form opened')" class="bg-[#871829] hover:bg-[#6d111e] text-white text-xs font-semibold px-3 py-1.5 rounded flex items-center gap-1.5 shadow-sm">
+              <i class="fa-solid fa-plus text-xs"></i>
+              <span>New Patient</span>
+            </button>
+          </div>
+
+          <!-- Category Segmented Filters -->
+          <div class="bg-[#871829] text-white grid grid-cols-3 text-[10.5px] font-semibold text-center border-b border-red-950">
+            <button class="py-2 bg-[#6d111e] border-b-2 border-white">Escalations</button>
+            <button class="py-2 text-red-100 hover:bg-[#781423] truncate px-1">Imaging/intervention/procedure</button>
+            <button class="py-2 text-red-100 hover:bg-[#781423] truncate px-1">Clearance/Consult</button>
+          </div>
+
+          <!-- Patient Cards Scroll View -->
+          <div id="patientListContainer" class="flex-1 overflow-y-auto app-scroll p-2 divide-y divide-neutral-200 bg-neutral-100 space-y-2">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Home Button Footer -->
+          <div class="bg-white border-t border-neutral-300 py-2 text-center">
+            <button onclick="navigateTo('screen-home')" class="text-[#6d111e] p-1">
+              <i class="fa-solid fa-house text-xl"></i>
+            </button>
+          </div>
+        </section>
+
+      </div> <!-- /Screens Container -->
+
+      <!-- iOS Home Indicator Bar -->
+      <div class="w-full py-1.5 flex justify-center bg-white">
+        <div class="w-32 h-1 bg-neutral-400 rounded-full"></div>
+      </div>
+
+    </div> <!-- /Bezel Wrapper -->
+  </main>
+
+  <!-- ================= INLINE TOAST MESSAGE (REPLACES ALERT) ================= -->
+  <div id="toastNotification" class="fixed bottom-6 bg-slate-900 text-white border border-slate-700 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-2 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMessage">Action recorded</span>
+  </div>
+
+  <!-- ================= JAVASCRIPT APPLICATION CORE ================= -->
+  <script>
+    // State Tracking
+    let isFloatingFiltered = false;
+    let selectedPscPatientId = null;
+    let pscDaysOffset = 0;
+
+    // Quality Patients Database (Lines, Foleys, and Wounds strictly aligned with checkboxes!)
+    const mockPatients = [
+      { room: "4401", name: "Leonardo DiCaprio", tubings: false, cvcs: false, foleys: true,  wounds: false, iso: false, details: "Regular Foley placed 10/18 (Urinary retention)" },
+      { room: "4402", name: "Meryl Streep",       tubings: false, cvcs: false, foleys: true,  wounds: false, iso: false, details: "Regular Foley (Strict I&O)" },
+      { room: "4403", name: "Pedro Pascal",       tubings: true,  cvcs: true,  foleys: false, wounds: false, iso: false, details: "PICC line for IV antibiotics; s/p Ablation" },
+      { room: "4404", name: "Emma Stone",         tubings: false, cvcs: false, foleys: false, wounds: false, iso: false, details: "Awaiting discharge summary" },
+      { room: "4405", name: "Keanu Reeves",       tubings: false, cvcs: false, foleys: true,  wounds: true,  iso: false, details: "Coudé Foley + Sacral Stage 2 Wound" },
+      { room: "4406", name: "Denzel Washington",  tubings: false, cvcs: false, foleys: false, wounds: false, iso: false, details: "Telemetry stepdown; off BiPAP" },
+      { room: "4407", name: "Zendaya Coleman",    tubings: true,  cvcs: true,  foleys: false, wounds: false, iso: false, details: "Tunneled HD catheter; HD Monday/Wed/Fri" },
+      { room: "4408", name: "Ryan Gosling",       tubings: false, cvcs: false, foleys: false, wounds: false, iso: false, details: "Post telemetry monitoring" },
+      { room: "4409", name: "Tom Hanks",          tubings: false, cvcs: false, foleys: false, wounds: false, iso: false, details: "Soft wrist restraints documented" },
+      { room: "4410", name: "Anne Hathaway",      tubings: false, cvcs: false, foleys: false, wounds: false, iso: false, details: "INR titration protocol" },
+      { room: "4411", name: "Morgan Freeman",     tubings: true,  cvcs: true,  foleys: false, wounds: false, iso: false, details: "Midline IV catheter; Difficult access" },
+      { room: "4412", name: "Cillian Murphy",     tubings: false, cvcs: false, foleys: false, wounds: false, iso: false, details: "Home O2 discharge coordination" },
+      { room: "4413", name: "Florence Pugh",      tubings: false, cvcs: false, foleys: false, wounds: false, iso: true,  details: "Contact Isolation (MRSA)" },
+      { room: "4414", name: "Scarlett Johansson", tubings: false, cvcs: false, foleys: false, wounds: false, iso: false, details: "Nephrostomy exchange pending" },
+      { room: "4418", name: "Margot Robbie",      tubings: false, cvcs: false, foleys: false, wounds: true,  iso: false, details: "Right lower extremity wound VAC" },
+      { room: "4419", name: "Paul Mescal",        tubings: true,  cvcs: true,  foleys: false, wounds: false, iso: false, details: "PICC line cleared; shelter discharge" },
+      { room: "4420", name: "Timothée Chalamet",  tubings: false, cvcs: false, foleys: false, wounds: false, iso: false, details: "Observation status rule-out" },
+      { room: "4421", name: "Viola Davis",        tubings: false, cvcs: false, foleys: false, wounds: false, iso: false, details: "Arrhythmia workup" }
+    ];
+
+    // PSC / Sitter Log Database (Patients needing 1:1 Safety Companions day by day)
+    const pscPatientsDatabase = [
+      {
+        id: "psc-1",
+        room: "4409",
+        name: "Tom Hanks",
+        indication: "High Fall Risk & Delirium",
+        urgency: "Constant 1:1 Sight",
+        primaryRn: "Taylor Swift, RN",
+        signed: true,
+        sitterName: "Selena Gomez, CNA",
+        sitterBadge: "PSC-8104",
+        shift: "Day Shift (0700 - 1930)",
+        signedTime: "Today at 07:18 AM",
+        signatureData: "sample-sig"
+      },
+      {
+        id: "psc-2",
+        room: "4405",
+        name: "Keanu Reeves",
+        indication: "Line / Foley Pulling & Agitation",
+        urgency: "Continuous Line of Sight",
+        primaryRn: "Chris Evans, RN",
+        signed: true,
+        sitterName: "Zac Efron, PSC",
+        sitterBadge: "PSC-3312",
+        shift: "Day Shift (0700 - 1930)",
+        signedTime: "Today at 07:25 AM",
+        signatureData: "sample-sig"
+      },
+      {
+        id: "psc-3",
+        room: "4414",
+        name: "Scarlett Johansson",
+        indication: "Elopement Risk / Impulsive Wandering",
+        urgency: "Immediate 1:1 Sitter Needed",
+        primaryRn: "Jennifer Aniston, RN",
+        signed: false,
+        sitterName: null,
+        sitterBadge: null,
+        shift: "Day Shift (0700 - 1930)",
+        signedTime: null,
+        signatureData: null
+      }
+    ];
+
+    // Staff Roster with Celebrity Names
+    const staffDatabase = [
+      { id: 1,  name: "Taylor Swift",        lastFloat: "05/11/2026", floatUnit: "3 West Med-Surg",  checked: true,  lastCancel: "08/14/2026", sdCount: 2, lastSdDate: "10/12/2026", stretchCount: 1, lastStretchDate: "09/18/2026" },
+      { id: 2,  name: "Brad Pitt",           lastFloat: "10/22/2026", floatUnit: "CCU Stepdown",      checked: false, lastCancel: "Never",      sdCount: 1, lastSdDate: "09/01/2026", stretchCount: 0, lastStretchDate: "Never" },
+      { id: 3,  name: "Beyoncé Knowles",     lastFloat: "10/15/2026", floatUnit: "5 North Neuro",     checked: true,  lastCancel: "06/10/2026", sdCount: 5, lastSdDate: "10/24/2026", stretchCount: 3, lastStretchDate: "10/20/2026" },
+      { id: 4,  name: "Ryan Reynolds",       lastFloat: "04/12/2026", floatUnit: "2 East Ortho",      checked: false, lastCancel: "07/04/2026", sdCount: 0, lastSdDate: "Never",      stretchCount: 1, lastStretchDate: "08/15/2026" },
+      { id: 5,  name: "Jennifer Aniston",    lastFloat: "09/05/2026", floatUnit: "ICU Float Pool",   checked: false, lastCancel: "Never",      sdCount: 0, lastSdDate: "Never",      stretchCount: 0, lastStretchDate: "Never" },
+      { id: 6,  name: "Chris Evans",         lastFloat: "07/19/2026", floatUnit: "Cardiovascular Tele", checked: false, lastCancel: "09/28/2026", sdCount: 3, lastSdDate: "10/05/2026", stretchCount: 2, lastStretchDate: "09/30/2026" },
+      { id: 7,  name: "Lady Gaga",           lastFloat: "10/02/2026", floatUnit: "3 West Med-Surg",  checked: false, lastCancel: "05/21/2026", sdCount: 4, lastSdDate: "10/21/2026", stretchCount: 4, lastStretchDate: "10/18/2026" },
+      { id: 8,  name: "Michael B. Jordan",   lastFloat: "06/25/2026", floatUnit: "Emergency Dept",   checked: false, lastCancel: "10/01/2026", sdCount: 1, lastSdDate: "08/20/2026", stretchCount: 1, lastStretchDate: "07/11/2026" },
+      { id: 9,  name: "Matthew McConaughey", lastFloat: "10/18/2026", floatUnit: "Telemetry Overflow", checked: false, lastCancel: "Never",      sdCount: 2, lastSdDate: "09/14/2026", stretchCount: 2, lastStretchDate: "09/15/2026" },
+      { id: 10, name: "Natalie Portman",     lastFloat: "08/30/2026", floatUnit: "4 East Surgical",  checked: false, lastCancel: "04/15/2026", sdCount: 3, lastSdDate: "10/10/2026", stretchCount: 1, lastStretchDate: "08/04/2026" },
+      { id: 11, name: "Oscar Isaac",         lastFloat: "03/10/2026", floatUnit: "PACU Recovery",    checked: false, lastCancel: "Never",      sdCount: 1, lastSdDate: "07/28/2026", stretchCount: 0, lastStretchDate: "Never" },
+      { id: 12, name: "Sandra Bullock",      lastFloat: "09/14/2026", floatUnit: "3 West Med-Surg",  checked: true,  lastCancel: "09/11/2026", sdCount: 4, lastSdDate: "10/19/2026", stretchCount: 3, lastStretchDate: "10/14/2026" },
+      { id: 13, name: "Paul Rudd",           lastFloat: "05/01/2026", floatUnit: "Observation Unit", checked: false, lastCancel: "03/22/2026", sdCount: 2, lastSdDate: "08/30/2026", stretchCount: 1, lastStretchDate: "07/20/2026" },
+      { id: 14, name: "Donald Glover",       lastFloat: "10/08/2026", floatUnit: "CCU Stepdown",      checked: true,  lastCancel: "08/01/2026", sdCount: 3, lastSdDate: "10/14/2026", stretchCount: 2, lastStretchDate: "09/12/2026" },
+      { id: 15, name: "Blake Lively",        lastFloat: "06/04/2026", floatUnit: "5 North Neuro",     checked: false, lastCancel: "Never",      sdCount: 1, lastSdDate: "06/18/2026", stretchCount: 0, lastStretchDate: "Never" }
+    ];
+
+    // Detailed Patient Cards (Full Patient List)
+    const patientCardsData = [
+      {
+        room: "4401",
+        name: "Leonardo DiCaprio",
+        badge: "Inpatient",
+        actions: ["Discharge"],
+        items: [
+          { text: "monitor bp and hr", checked: true },
+          { text: "voiding trial after foley d/c", checked: false }
+        ]
+      },
+      {
+        room: "4402",
+        name: "Meryl Streep",
+        badge: "Stepdown",
+        actions: [],
+        items: [
+          { text: "Formal echo read pending", checked: false },
+          { text: "High-flow O2 weaning 10/26", checked: true }
+        ]
+      },
+      {
+        room: "4403",
+        name: "Pedro Pascal",
+        badge: "Stepdown",
+        actions: ["Downgrade"],
+        items: [
+          { text: "s/p EP Ablation, Perforated Septum", checked: true },
+          { text: "A-line removed, site intact", checked: true },
+          { text: "PICC IV antibiotics completed", checked: false }
+        ]
+      },
+      {
+        room: "4405",
+        name: "Keanu Reeves",
+        badge: "Stepdown",
+        actions: [],
+        items: [
+          { text: "Coudé foley patent; strict output", checked: true },
+          { text: "Sacral wound dressing change q-shift", checked: false }
+        ]
+      },
+      {
+        room: "4407",
+        name: "Zendaya Coleman",
+        badge: "Observation",
+        actions: [],
+        items: [
+          { text: "Troponin trending q3h (last 0.42)", checked: false },
+          { text: "Nephrology consult for HD access", checked: true }
+        ]
+      },
+      {
+        room: "4408",
+        name: "Denzel Washington",
+        badge: "Stepdown",
+        actions: ["Downgrade"],
+        items: [
+          { text: "BiPAP discontinued; RA trial passed", checked: true },
+          { text: "Floor tele bed request submitted", checked: false }
+        ]
+      },
+      {
+        room: "4409",
+        name: "Tom Hanks",
+        badge: "Inpatient",
+        actions: [],
+        items: [
+          { text: "Bilateral wrist restraints Q2h checks", checked: true },
+          { text: "Geriatric psychiatry delirium consult", checked: false }
+        ]
+      },
+      {
+        room: "4414",
+        name: "Scarlett Johansson",
+        badge: "Observation",
+        actions: [],
+        items: [
+          { text: "NEPHROSTOMY TUBE EXCHANGE MONDAY", checked: false },
+          { text: "Pre-op NPO after midnight", checked: false }
+        ]
+      }
+    ];
+
+    // Master Navigation Function
+    function navigateTo(screenId) {
+      document.querySelectorAll('.app-screen').forEach(scr => scr.classList.add('hidden'));
+      const target = document.getElementById(screenId);
+      if (target) {
+        target.classList.remove('hidden');
+        document.getElementById('screenMasterPicker').value = screenId;
+      }
+    }
+
+    // 1. Render Quality Resource Rounds (Fixed column spacing, perfectly aligned headers and inputs)
+    function renderQualityTable() {
+      const container = document.getElementById('qualityTableRows');
+      container.innerHTML = mockPatients.map((p, idx) => `
+        <div class="flex items-center py-2 px-2 hover:bg-neutral-50 transition-colors border-b border-neutral-100 select-none">
+          <div class="w-[52px] shrink-0 text-left pl-1 font-bold text-neutral-800 text-xs">${p.room}</div>
+          <div class="flex-1 min-w-0 text-left pl-1.5 truncate font-medium text-neutral-800 text-xs" title="${p.name} - ${p.details}">
+            ${p.name}
+          </div>
+          <div class="flex items-center shrink-0 space-x-1">
+            <div class="w-[32px] flex justify-center">
+              <input type="checkbox" class="power-check" ${p.tubings ? 'checked' : ''} onchange="mockPatients[${idx}].tubings = this.checked">
+            </div>
+            <div class="w-[30px] flex justify-center">
+              <input type="checkbox" class="power-check" ${p.cvcs ? 'checked' : ''} onchange="mockPatients[${idx}].cvcs = this.checked">
+            </div>
+            <div class="w-[30px] flex justify-center">
+              <input type="checkbox" class="power-check" ${p.foleys ? 'checked' : ''} onchange="mockPatients[${idx}].foleys = this.checked">
+            </div>
+            <div class="w-[34px] flex justify-center">
+              <input type="checkbox" class="power-check" ${p.wounds ? 'checked' : ''} onchange="mockPatients[${idx}].wounds = this.checked">
+            </div>
+            <div class="w-[42px] flex items-center justify-between pl-1">
+              <input type="checkbox" class="power-check" ${p.iso ? 'checked' : ''} onchange="mockPatients[${idx}].iso = this.checked">
+              <button onclick="navigateTo('screen-patient-list')" class="text-neutral-400 hover:text-[#6d111e] p-0.5 ml-0.5">
+                <i class="fa-solid fa-chevron-right text-[11px]"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 2. Render PSC (Patient Safety Companion / Sitter) Log
+    function renderPscList() {
+      const container = document.getElementById('pscCardsContainer');
+      const pendingCountEl = document.getElementById('pscPendingCount');
+      
+      const pending = pscPatientsDatabase.filter(p => !p.signed).length;
+      pendingCountEl.textContent = `${pending} Pending Sign-off`;
+
+      container.innerHTML = pscPatientsDatabase.map(p => {
+        return `
+          <div class="bg-white rounded-xl border ${p.signed ? 'border-emerald-200' : 'border-amber-300 shadow-md'} p-3 space-y-2.5 transition-all">
+            <!-- Header Row -->
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-extrabold text-neutral-900">Bed ${p.room}</span>
+                  <span class="text-[9.5px] px-2 py-0.5 rounded-full font-bold ${p.signed ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800 animate-pulse'}">
+                    ${p.urgency}
+                  </span>
+                </div>
+                <div class="text-xs font-bold text-neutral-800 mt-0.5">${p.name}</div>
+                <div class="text-[10.5px] text-neutral-600">Reason: <strong class="text-neutral-800">${p.indication}</strong></div>
+              </div>
+              
+              <!-- Status Badge / Action -->
+              <div>
+                ${p.signed 
+                  ? `<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300">
+                      <i class="fa-solid fa-circle-check text-emerald-600"></i> Active Sitter
+                     </span>`
+                  : `<button onclick="openPscForm('${p.id}')" class="bg-[#871829] hover:bg-[#6d111e] text-white text-[10.5px] font-bold px-2.5 py-1 rounded shadow-sm flex items-center gap-1">
+                      <i class="fa-solid fa-pen-nib text-[9px]"></i> Sign In
+                     </button>`
+                }
+              </div>
+            </div>
+
+            <!-- Attestation / Signature Proof Details -->
+            ${p.signed ? `
+              <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center justify-between">
+                <div class="space-y-0.5">
+                  <div class="text-[11px] font-bold text-neutral-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-shield-cat text-emerald-600"></i>
+                    <span>PSC: ${p.sitterName}</span>
+                    <span class="text-[9px] text-neutral-500 font-normal">(${p.sitterBadge || 'Staff'})</span>
+                  </div>
+                  <div class="text-[9.5px] text-neutral-500">
+                    Handoff signed: <span class="text-neutral-700 font-medium">${p.signedTime}</span>
+                  </div>
+                  <div class="text-[9px] text-emerald-700 font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-check text-[8px]"></i> Rounding, Unit Orientation & RN report verified
+                  </div>
+                </div>
+
+                <!-- Digital Signature Thumbnail Badge -->
+                <div class="border border-neutral-300 rounded bg-white p-1 shadow-sm text-center">
+                  ${p.signatureData && p.signatureData.startsWith('data:image') 
+                    ? `<img src="${p.signatureData}" alt="Signature" class="h-6 w-20 object-contain">`
+                    : `<span class="italic text-[10px] font-serif text-blue-900 px-2 font-bold select-none">${p.sitterName}</span>`
+                  }
+                  <div class="text-[8px] text-neutral-400 border-t border-neutral-100 mt-0.5 font-medium">Digital Signature</div>
+                </div>
+              </div>
+            ` : `
+              <div class="bg-amber-50/70 border border-dashed border-amber-300 rounded-lg p-2 text-center">
+                <div class="text-[10px] text-amber-900 font-medium">
+                  Awaiting Safety Companion assignment and signature attestation for Day shift.
+                </div>
+                <button onclick="openPscForm('${p.id}')" class="mt-1.5 text-xs text-[#6d111e] hover:underline font-bold inline-flex items-center gap-1">
+                  <span>Open Attestation & Signature Pad</span>
+                  <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </button>
+              </div>
+            `}
+
+            <div class="flex items-center justify-between text-[9px] text-neutral-400 pt-0.5">
+              <span>Primary RN: ${p.primaryRn}</span>
+              <button onclick="openPscForm('${p.id}')" class="text-neutral-600 hover:text-[#6d111e] font-semibold underline">
+                ${p.signed ? 'Re-attest / View Form' : 'Complete Form'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Day-by-Day Date Shifter
+    function changePscDate(delta) {
+      pscDaysOffset += delta;
+      const d = new Date();
+      d.setDate(d.getDate() + pscDaysOffset);
+      
+      const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+      const dateStr = d.toLocaleDateString('en-US', options);
+      
+      const display = document.getElementById('pscCurrentDateDisplay');
+      display.textContent = pscDaysOffset === 0 ? `Today, ${dateStr}` : dateStr;
+      showToast(`Showing PSC Sitter roster for: ${dateStr}`);
+    }
+
+    // Open Attestation Form for a Patient
+    function openPscForm(patientId) {
+      selectedPscPatientId = patientId;
+      const pt = pscPatientsDatabase.find(p => p.id === patientId);
+      if (!pt) return;
+
+      document.getElementById('formRoom').textContent = `Bed ${pt.room}`;
+      document.getElementById('formPatientName').textContent = pt.name;
+      document.getElementById('formIndicationBadge').textContent = pt.indication;
+
+      // Populate or reset form fields
+      document.getElementById('sitterNameInput').value = pt.sitterName || '';
+      document.getElementById('sitterBadgeInput').value = pt.sitterBadge || '';
+      document.getElementById('checkRounding').checked = true;
+      document.getElementById('checkOriented').checked = true;
+      document.getElementById('checkReport').checked = true;
+
+      navigateTo('screen-psc-form');
+      setTimeout(initSignaturePad, 100);
+    }
+
+    // ================= HTML5 CANVAS SIGNATURE PAD IMPLEMENTATION =================
+    let sigCanvas, sigCtx;
+    let isDrawing = false;
+    let hasDrawn = false;
+
+    function initSignaturePad() {
+      sigCanvas = document.getElementById('signatureCanvas');
+      if (!sigCanvas) return;
+      sigCtx = sigCanvas.getContext('2d');
+      
+      // Resize to match actual bounding box
+      const rect = sigCanvas.getBoundingClientRect();
+      sigCanvas.width = rect.width;
+      sigCanvas.height = rect.height;
+
+      sigCtx.lineWidth = 2.2;
+      sigCtx.lineCap = 'round';
+      sigCtx.lineJoin = 'round';
+      sigCtx.strokeStyle = '#1e3a8a'; // Clinical navy blue ink
+
+      hasDrawn = false;
+      document.getElementById('sigPlaceholderNote').classList.remove('hidden');
+
+      // Mouse Listeners
+      sigCanvas.onmousedown = (e) => startDrawing(e.offsetX, e.offsetY);
+      sigCanvas.onmousemove = (e) => draw(e.offsetX, e.offsetY);
+      window.onmouseup = () => stopDrawing();
+
+      // Touch Listeners for mobile/iPad
+      sigCanvas.ontouchstart = (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const r = sigCanvas.getBoundingClientRect();
+        startDrawing(touch.clientX - r.left, touch.clientY - r.top);
+      };
+      sigCanvas.ontouchmove = (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const r = sigCanvas.getBoundingClientRect();
+        draw(touch.clientX - r.left, touch.clientY - r.top);
+      };
+      sigCanvas.ontouchend = () => stopDrawing();
+    }
+
+    function startDrawing(x, y) {
+      isDrawing = true;
+      hasDrawn = true;
+      document.getElementById('sigPlaceholderNote').classList.add('hidden');
+      sigCtx.beginPath();
+      sigCtx.moveTo(x, y);
+    }
+
+    function draw(x, y) {
+      if (!isDrawing) return;
+      sigCtx.lineTo(x, y);
+      sigCtx.stroke();
+    }
+
+    function stopDrawing() {
+      if (isDrawing) {
+        sigCtx.closePath();
+        isDrawing = false;
+      }
+    }
+
+    function clearSignatureCanvas() {
+      if (!sigCanvas || !sigCtx) return;
+      sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+      hasDrawn = false;
+      document.getElementById('sigPlaceholderNote').classList.remove('hidden');
+    }
+
+    function submitPscAttestation() {
+      const name = document.getElementById('sitterNameInput').value.trim();
+      const badge = document.getElementById('sitterBadgeInput').value.trim();
+      const shift = document.getElementById('sitterShiftSelect').value;
+      const rounding = document.getElementById('checkRounding').checked;
+      const oriented = document.getElementById('checkOriented').checked;
+      const report = document.getElementById('checkReport').checked;
+
+      if (!name) {
+        showToast("Please enter Sitter Full Name");
+        document.getElementById('sitterNameInput').focus();
+        return;
+      }
+
+      if (!rounding || !oriented || !report) {
+        showToast("All attestation checkboxes must be checked");
+        return;
+      }
+
+      if (!hasDrawn) {
+        showToast("Please provide Patient Safety Companion signature");
+        return;
+      }
+
+      const sigDataUrl = sigCanvas.toDataURL('image/png');
+      const pt = pscPatientsDatabase.find(p => p.id === selectedPscPatientId);
+      
+      if (pt) {
+        pt.signed = true;
+        pt.sitterName = name;
+        pt.sitterBadge = badge || "CNA/PSC";
+        pt.shift = shift;
+        pt.signedTime = `Today at ${document.getElementById('currentTime').textContent}`;
+        pt.signatureData = sigDataUrl;
+
+        renderPscList();
+        showToast(`Attestation signed & verified for Bed ${pt.room}`);
+        navigateTo('screen-psc');
+      }
+    }
+
+    // 3. Render Floating Log
+    function renderFloatingLog(filtered = false, search = '') {
+      const container = document.getElementById('floatingStaffList');
+      let list = [...staffDatabase];
+
+      if (filtered) {
+        list = list.filter(s => s.checked);
+      }
+      if (search.trim() !== '') {
+        const q = search.toLowerCase();
+        list = list.filter(s => s.name.toLowerCase().includes(q));
+      }
+
+      container.innerHTML = list.map(staff => `
+        <div class="flex items-center justify-between px-3 py-2.5 hover:bg-neutral-50 transition-colors">
+          <div class="flex items-center gap-3">
+            <input type="checkbox" class="staff-check" ${staff.checked ? 'checked' : ''} onchange="toggleStaffSelection(${staff.id}, this.checked)">
+            <div>
+              <span class="text-xs text-neutral-800 font-semibold block leading-tight">${staff.name}</span>
+              <span class="text-[10px] text-neutral-500">${staff.floatUnit}</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-neutral-700 font-medium block">${staff.lastFloat}</span>
+            <button onclick="logFloatForStaff('${staff.name}')" class="text-[9.5px] text-[#6d111e] hover:underline font-semibold">Log Float Today</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleStaffSelection(id, isChecked) {
+      const s = staffDatabase.find(item => item.id === id);
+      if (s) s.checked = isChecked;
+    }
+
+    function toggleFloatingFilter() {
+      isFloatingFiltered = !isFloatingFiltered;
+      const btn = document.getElementById('floatingFilterBtn');
+      if (isFloatingFiltered) {
+        btn.classList.add('text-amber-300');
+        showToast("Filtering to selected RNs queued for float");
+      } else {
+        btn.classList.remove('text-amber-300');
+        showToast("Showing all unit RNs");
+      }
+      renderFloatingLog(isFloatingFiltered, document.getElementById('floatingSearchInput').value);
+    }
+
+    function filterFloatingStaff() {
+      const q = document.getElementById('floatingSearchInput').value;
+      renderFloatingLog(isFloatingFiltered, q);
+    }
+
+    function logFloatForStaff(name) {
+      showToast(`Float shift logged for ${name} (Dispatched to Float Pool)`);
+    }
+
+    function recordNewFloatAction() {
+      showToast("Float shift recorded for selected staff");
+    }
+
+    // 4. Render Cancellations Log (Fairness rotation: Never cancelled or oldest cancel at top)
+    function renderCancellationsLog(search = '') {
+      const container = document.getElementById('cancellationsStaffList');
+      let list = [...staffDatabase].sort((a, b) => {
+        if (a.lastCancel === 'Never') return -1;
+        if (b.lastCancel === 'Never') return 1;
+        return new Date(a.lastCancel) - new Date(b.lastCancel);
+      });
+
+      if (search.trim() !== '') {
+        const q = search.toLowerCase();
+        list = list.filter(s => s.name.toLowerCase().includes(q));
+      }
+
+      container.innerHTML = list.map((staff, idx) => `
+        <div class="flex items-center justify-between px-3 py-2.5 hover:bg-neutral-50 transition-colors">
+          <div class="flex items-center gap-2.5">
+            <span class="w-5 h-5 rounded-full ${idx < 3 ? 'bg-amber-100 text-amber-800 font-bold border border-amber-300' : 'bg-neutral-100 text-neutral-600'} text-[10px] flex items-center justify-center font-semibold">
+              ${idx + 1}
+            </span>
+            <div>
+              <span class="text-xs text-neutral-800 font-semibold block leading-tight">${staff.name}</span>
+              <span class="text-[9.5px] text-neutral-500 font-medium">Last LC: <strong class="${staff.lastCancel === 'Never' ? 'text-emerald-700' : 'text-neutral-700'}">${staff.lastCancel}</strong></span>
+            </div>
+          </div>
+          <button onclick="recordCancellation('${staff.name}')" class="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[10.5px] font-semibold px-2 py-1 rounded shadow-sm">
+            Offer Low Census
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function filterCancellationList() {
+      const q = document.getElementById('cancellationSearchInput').value;
+      renderCancellationsLog(q);
+    }
+
+    function recordCancellation(name) {
+      showToast(`Low census standby shift confirmed for ${name}`);
+    }
+
+    // 5. Render Stepdown (SD) RN Rotation Log (Least SD shifts at top)
+    function renderSdRotation() {
+      const container = document.getElementById('sdRnList');
+      const sorted = [...staffDatabase].sort((a, b) => a.sdCount - b.sdCount);
+
+      container.innerHTML = sorted.map((staff, idx) => `
+        <div class="flex items-center justify-between px-3 py-2.5 hover:bg-neutral-50 transition-colors">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-neutral-900">${staff.name}</span>
+              ${idx === 0 || staff.sdCount === 0 ? '<span class="text-[9px] bg-red-100 text-red-800 font-bold px-1.5 py-0.2 rounded border border-red-200">Next for SD</span>' : ''}
+            </div>
+            <div class="text-[10px] text-neutral-500">Last Stepdown: ${staff.lastSdDate}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold px-2 py-1 bg-neutral-100 text-neutral-800 rounded border border-neutral-200">
+              ${staff.sdCount} SD Shifts
+            </span>
+            <button onclick="incrementSdShift(${staff.id})" class="bg-[#6d111e] hover:bg-[#520b16] text-white text-[10px] font-semibold px-2 py-1 rounded shadow-sm">
+              +1 SD
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function incrementSdShift(id) {
+      const s = staffDatabase.find(item => item.id === id);
+      if (s) {
+        s.sdCount += 1;
+        s.lastSdDate = "Today 10/27";
+        renderSdRotation();
+        showToast(`Logged SD shift for ${s.name} (Total: ${s.sdCount})`);
+      }
+    }
+
+    // 6. Render Stretched RN Rotation Log (Least Stretched at top)
+    function renderStretchedRotation() {
+      const container = document.getElementById('stretchedRnList');
+      const sorted = [...staffDatabase].sort((a, b) => a.stretchCount - b.stretchCount);
+
+      container.innerHTML = sorted.map((staff, idx) => `
+        <div class="flex items-center justify-between px-3 py-2.5 hover:bg-neutral-50 transition-colors">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-neutral-900">${staff.name}</span>
+              ${idx === 0 || staff.stretchCount === 0 ? '<span class="text-[9px] bg-purple-100 text-purple-800 font-bold px-1.5 py-0.2 rounded border border-purple-200">Next Eligible</span>' : ''}
+            </div>
+            <div class="text-[10px] text-neutral-500">Last Stretched: ${staff.lastStretchDate}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold px-2 py-1 bg-neutral-100 text-neutral-800 rounded border border-neutral-200">
+              ${staff.stretchCount}x Stretched
+            </span>
+            <button onclick="incrementStretchShift(${staff.id})" class="bg-purple-900 hover:bg-purple-950 text-white text-[10px] font-semibold px-2 py-1 rounded shadow-sm">
+              +1 Stretch
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function incrementStretchShift(id) {
+      const s = staffDatabase.find(item => item.id === id);
+      if (s) {
+        s.stretchCount += 1;
+        s.lastStretchDate = "Today 10/27";
+        renderStretchedRotation();
+        showToast(`Stretched ratio assigned to ${s.name} (Total: ${s.stretchCount}x)`);
+      }
+    }
+
+    // 7. Render Full Patient List Cards (Screen 14)
+    function renderPatientCards() {
+      const container = document.getElementById('patientListContainer');
+      container.innerHTML = patientCardsData.map((pt, pIdx) => `
+        <div class="bg-white rounded border border-neutral-300 p-2.5 shadow-sm space-y-2">
+          <!-- Card Header -->
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-neutral-900 text-sm">${pt.room}</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold badge-${pt.badge.toLowerCase()}">${pt.badge}</span>
+              </div>
+              <div class="text-xs text-neutral-700 font-bold">${pt.name}</div>
+            </div>
+
+            <!-- Card Actions -->
+            <div class="flex flex-col gap-1 items-end">
+              ${pt.actions.map(act => `
+                <button onclick="showToast('${act} initiated for ${pt.name}')" class="text-[10px] px-2 py-0.5 rounded font-semibold text-white bg-[#871829] hover:bg-[#6d111e]">
+                  ${act}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Items Checklist -->
+          ${pt.items.length > 0 ? `
+            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-neutral-100">
+              ${pt.items.map((item, iIdx) => `
+                <label class="flex items-start gap-1.5 text-[10px] text-neutral-700 bg-neutral-50 p-1 rounded border border-neutral-200">
+                  <input type="checkbox" class="power-check mt-0.5" style="width:14px;height:14px;" ${item.checked ? 'checked' : ''} onchange="patientCardsData[${pIdx}].items[${iIdx}].checked = this.checked">
+                  <span class="leading-tight">${item.text}</span>
+                </label>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          <!-- Add Item Row -->
+          <div class="flex items-center justify-between pt-1 gap-2">
+            <div class="flex items-center gap-1 w-1/2">
+              <input type="text" placeholder="Add item" class="w-full text-[10px] border border-neutral-300 px-1.5 py-0.5 rounded outline-none focus:border-[#6d111e]">
+              <button onclick="showToast('Item recorded for Bed ${pt.room}')" class="bg-[#6d111e] text-white px-2 py-0.5 rounded text-[10px] hover:bg-[#520b16]">
+                <i class="fa-solid fa-check"></i>
+              </button>
+            </div>
+            <div class="flex items-center gap-1 w-1/2">
+              <input type="text" placeholder="Add item" class="w-full text-[10px] border border-neutral-300 px-1.5 py-0.5 rounded outline-none focus:border-[#6d111e]">
+              <button onclick="showToast('Item recorded for Bed ${pt.room}')" class="bg-[#6d111e] text-white px-2 py-0.5 rounded text-[10px] hover:bg-[#520b16]">
+                <i class="fa-solid fa-check"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Custom Toast Notification
+    let toastTimeout;
+    function showToast(message) {
+      const toast = document.getElementById('toastNotification');
+      const msg = document.getElementById('toastMessage');
+      msg.textContent = message;
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 2300);
+    }
+
+    // Live Clock for Phone Status Bar
+    function updateClock() {
+      const now = new Date();
+      let hours = now.getHours();
+      let minutes = now.getMinutes();
+      hours = hours % 12 || 12;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      document.getElementById('currentTime').textContent = `${hours}:${minutes}`;
+    }
+
+    // Application Initialization
+    window.onload = function() {
+      updateClock();
+      setInterval(updateClock, 10000);
+      renderQualityTable();
+      renderPscList();
+      renderFloatingLog();
+      renderCancellationsLog();
+      renderSdRotation();
+      renderStretchedRotation();
+      renderPatientCards();
+    };
+  </script>
+</body>
+</html>
